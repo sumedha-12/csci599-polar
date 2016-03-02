@@ -1,50 +1,86 @@
+import json
 import os
-
-def fingerprint(array):
-     pnf= 0
-     nfs = [0]*256
-     nfps = [0]*256
-     ofps = [0]*256
-
-     if (pnf == 0):
-         for i in range(256)
-             nfps[i] = array[i]
-             ofps[0]=nfps[0]
-             pnf+=1
-     else:
-         for i in range(256):
-             nfps[i]=((ofps[i]*pnf) + array[i])/(pnf+1)
-             ofps[i]=nfps[i]
-             print(nfps[i])
-             pnf+=1
-
-     #for i in range (256):
-        # print(nfps[i])
+import math
+from os import listdir
+from os.path import isfile, join
 
 
-def normalize(arr):
-    max=arr[0]
+def initialize(arr):
     for i in range(256):
-       if arr[i]>max:
-           max=arr[i]
+        arr[i]=0
+    return
 
+
+def read_directory_recur(path, filelist):
+    if not os.path.exists(path):
+        print(" Specified path {pathname} does not exist!".format(pathname=path))
+        sys.exit()
+    for f in listdir(path):
+        if isfile(join(path, f)):
+            # print(join(path,f))
+          filelist.append(join(path, f))
+        else:
+            read_directory_recur(join(path, f), filelist)
+    return
+
+
+def update_correlation(co_relation, number_of_files):
     for i in range(256):
-        assert max>0
-        arr[i]=arr[i]/max
+        corelation[i] = (corelation[i]*number_of_files +co_relation[i])/(number_of_files+1)
+
+def read_bytes(filename, fingerprint):
+    max=1
+    if not os.path.exists(filename):
+        print(" File \"{filen}\" could not be found".format(filen=filename))
+        print(" Skipping !")
+        return
+    if (os.path.getsize(filename) == 0):
+        print(" Empty file is {fname}".format(fname=filename))
+    # Add a try catch to save file reads
+    with open(filename, "rb") as input_file:
+        try:
+            bytes_from_file = input_file.read(8192)
+            while bytes_from_file:
+                for b in bytes_from_file:
+                    # print("read byte: {byte}".format(byte = b))
+                    fingerprint[b] += 1
+                bytes_from_file = input_file.read(8192)
+        finally:
+			input_file.close
+	#normalize the fingerprint
+	for i in range(256)
+		if max < fingerprint[i]:
+			max = fingerprint[i]
+	for i in range(256):
+		fingerprint[i] =  fingerprint[i]/max
+	return
+
+
+
+
+
+def compute_bfa(filelist, global_fingerprint):
+	for i in range(len(filelist)):
+		pointer_fingerprint = {}
+		file =  filelist[i]
+		read_bytes(file, pointer_fingerprint)
+		co_relation = cal_corelation(fp,global_fingerprint)
+		if (i == 1):
+			corelation = co_relation
+		else:
+			update_corelation(co_relation,corelation,i)
+		update_fingerprint(pointer_fingerprint,global_fingerprint,i+1)
+	return global_fingerprint
+
+
+
 
 def testbfa():
-
-    for root, dirs, files in os.walk("C:\\Users\\Sue_12\\Desktop\\pdf_test", topdown=False):
-        arr = [0]*256
-        for name in files:
-           with open(os.path.join(root, name), 'rb') as f:
-                byte = f.read(1)
-                while len(byte) > 0:
-                    index = ord(byte)
-                    arr[index] += 1
-                    byte = f.read(1)
-                normalize(arr)
-                print(arr)
-                fingerprint(arr)
-
-testbfa()
+    filelist = []
+    global_fingerprint = {}
+    corelation = {}
+    initialize(global_fingerprint)
+    read_directory_recur(path,filelist)
+    global_fingerprint = compute_bfa(filelist,global_fingerprint, corelation)
+    # Dump the fingerprint and Co-relation as a JSON to a file
+    print(json.dumps(global_fingerprint,indent=4))
