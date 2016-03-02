@@ -23,10 +23,15 @@ def read_directory_recur(path, filelist):
             read_directory_recur(join(path, f), filelist)
     return
 
+def update_fingerprint(pointer_fingerprint, fingeprint, number_of_files):
+    for i in range(0,256):
+        fingerprint[i] = (fingerprint[i]*number_of_files + pointer_fingerprint[i])/(number_of_files + 1)
+    return
 
 def update_correlation(co_relation, number_of_files):
     for i in range(256):
-        corelation[i] = (corelation[i]*number_of_files +co_relation[i])/(number_of_files+1)
+        corelation[i] = (corelation[i] * number_of_files + co_relation[i])/(number_of_files+1)
+    return
 
 def read_bytes(filename, fingerprint):
     max=1
@@ -48,7 +53,7 @@ def read_bytes(filename, fingerprint):
         finally:
 			input_file.close
 	#normalize the fingerprint
-	for i in range(256)
+    for i in range(256):
 		if max < fingerprint[i]:
 			max = fingerprint[i]
 	for i in range(256):
